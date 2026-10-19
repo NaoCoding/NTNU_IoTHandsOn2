@@ -20,8 +20,21 @@ TOPIC = "iot/dht11"
 BAUD = 9600
 DURATION = 30                 # 秒
 
-# Arduino B 轉出來的是 "61.00,25.00"；用 findall 防止兩筆黏在同一行
+# 支援 Arduino B 轉出的純 CSV，以及帶有 Humidity/Temperature 標籤的輸出。
+# 用 findall 可防止兩筆資料黏在同一行時漏掉後面的資料。
 RE_CSV = re.compile(r"(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)")
+RE_LABELLED = re.compile(
+    r"Humidity:\s*(-?\d+(?:\.\d+)?).*?Temperature:\s*(-?\d+(?:\.\d+)?)",
+    re.IGNORECASE,
+)
+
+
+def parse_records(line):
+    """回傳一行中所有 (濕度, 溫度) 記錄。"""
+    labelled = RE_LABELLED.findall(line)
+    if labelled:
+        return labelled
+    return RE_CSV.findall(line)
 
 
 def find_port():
@@ -63,7 +76,7 @@ def main():
             line = ser.readline().decode("utf-8", errors="ignore").strip()
             if not line:
                 continue
-            records = RE_CSV.findall(line)
+            records = parse_records(line)
             if not records:
                 print(f"(略過) {line}")
                 continue
