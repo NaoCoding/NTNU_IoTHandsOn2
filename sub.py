@@ -1,15 +1,18 @@
-# sub.py（修正版）— 訂閱 hello/world
-# 用法： python sub.py <BROKER_IP>
+# sub.py — Classwork Subscriber
+# 訂閱 iot/dht11，印出收到的「濕度,溫度」
+# 用法： python sub.py [BROKER_IP]
 import sys
 
 import paho.mqtt.client as mqtt
 
 BROKER_IP = sys.argv[1] if len(sys.argv) > 1 else "192.168.43.10"
+BROKER_PORT = 1883
+TOPIC = "iot/dht11"
 
 
 def on_connect(client, userdata, flags, rc, properties=None):
     print("Connected with result code " + str(getattr(rc, "value", rc)))  # 0 = 成功
-    client.subscribe("hello/world")   # 是 subscribe，不是投影片寫的 subscriber
+    client.subscribe(TOPIC)
 
 
 def on_message(client, userdata, msg):
@@ -22,7 +25,7 @@ except AttributeError:
     client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect(BROKER_IP, 1883)
+client.connect(BROKER_IP, BROKER_PORT, 60)
 try:
     client.loop_forever()
 except KeyboardInterrupt:
